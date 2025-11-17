@@ -88,9 +88,9 @@ test_dns_parser: test_dns_parser.o dns_parser.o utils.o
 	@echo "$(COLOR_YELLOW)Building test_dns_parser...$(COLOR_RESET)"
 	$(CC) $(CFLAGS) -o test_dns_parser test_dns_parser.o dns_parser.o utils.o
 
-test_dns_builder: test_dns_builder.o dns_builder.o utils.o
+test_dns_builder: test_dns_builder.o dns_builder.o dns_parser.o utils.o
 	@echo "$(COLOR_YELLOW)Building test_dns_builder...$(COLOR_RESET)"
-	$(CC) $(CFLAGS) -o test_dns_builder test_dns_builder.o dns_builder.o utils.o
+	$(CC) $(CFLAGS) -o test_dns_builder test_dns_builder.o dns_builder.o dns_parser.o utils.o
 
 test_dns_server: test_dns_server.o dns_server.o dns_parser.o filter.o utils.o
 	@echo "$(COLOR_YELLOW)Building test_dns_server...$(COLOR_RESET)"
