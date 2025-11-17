@@ -14,7 +14,9 @@ OBJECTS = $(SOURCES:.c=.o)
 TARGET = dns
 
 # Test súbory
-TEST_SOURCES = test_filter.c test_dns_parser.c test_dns_builder.c test_dns_server.c test_resolver.c test_integration.c
+TEST_DIR = tests
+TEST_SOURCES = $(TEST_DIR)/test_filter.c $(TEST_DIR)/test_dns_parser.c $(TEST_DIR)/test_dns_builder.c $(TEST_DIR)/test_dns_server.c $(TEST_DIR)/test_resolver.c $(TEST_DIR)/test_integration.c
+TEST_OBJECTS = $(TEST_DIR)/test_filter.o $(TEST_DIR)/test_dns_parser.o $(TEST_DIR)/test_dns_builder.o $(TEST_DIR)/test_dns_server.o $(TEST_DIR)/test_resolver.o $(TEST_DIR)/test_integration.o
 TEST_TARGETS = test_filter test_dns_parser test_dns_builder test_dns_server test_resolver test_integration
 
 # Farby pre výstup
@@ -47,7 +49,7 @@ $(TARGET): $(OBJECTS)
 clean:
 	@echo "$(COLOR_YELLOW)Cleaning...$(COLOR_RESET)"
 	rm -f $(OBJECTS) $(TARGET)
-	rm -f $(TEST_TARGETS) test_*.o
+	rm -f $(TEST_TARGETS) $(TEST_OBJECTS)
 	rm -f *.core core
 	rm -f vgcore.*
 	rm -f valgrind.log
@@ -79,30 +81,35 @@ test_script: $(TARGET)
 		echo "Run 'make test' instead"; \
 	fi
 
+# Kompilácia test object súborov
+$(TEST_DIR)/%.o: $(TEST_DIR)/%.c $(HEADERS)
+	@echo "$(COLOR_YELLOW)Compiling $<...$(COLOR_RESET)"
+	$(CC) $(CFLAGS) -I. -c $< -o $@
+
 # Kompilácia jednotlivých testov
-test_filter: test_filter.o filter.o utils.o
+test_filter: $(TEST_DIR)/test_filter.o filter.o utils.o
 	@echo "$(COLOR_YELLOW)Building test_filter...$(COLOR_RESET)"
-	$(CC) $(CFLAGS) -o test_filter test_filter.o filter.o utils.o
+	$(CC) $(CFLAGS) -o test_filter $(TEST_DIR)/test_filter.o filter.o utils.o
 
-test_dns_parser: test_dns_parser.o dns_parser.o utils.o
+test_dns_parser: $(TEST_DIR)/test_dns_parser.o dns_parser.o utils.o
 	@echo "$(COLOR_YELLOW)Building test_dns_parser...$(COLOR_RESET)"
-	$(CC) $(CFLAGS) -o test_dns_parser test_dns_parser.o dns_parser.o utils.o
+	$(CC) $(CFLAGS) -o test_dns_parser $(TEST_DIR)/test_dns_parser.o dns_parser.o utils.o
 
-test_dns_builder: test_dns_builder.o dns_builder.o dns_parser.o utils.o
+test_dns_builder: $(TEST_DIR)/test_dns_builder.o dns_builder.o dns_parser.o utils.o
 	@echo "$(COLOR_YELLOW)Building test_dns_builder...$(COLOR_RESET)"
-	$(CC) $(CFLAGS) -o test_dns_builder test_dns_builder.o dns_builder.o dns_parser.o utils.o
+	$(CC) $(CFLAGS) -o test_dns_builder $(TEST_DIR)/test_dns_builder.o dns_builder.o dns_parser.o utils.o
 
-test_dns_server: test_dns_server.o dns_server.o dns_parser.o dns_builder.o filter.o resolver.o utils.o
+test_dns_server: $(TEST_DIR)/test_dns_server.o dns_server.o dns_parser.o dns_builder.o filter.o resolver.o utils.o
 	@echo "$(COLOR_YELLOW)Building test_dns_server...$(COLOR_RESET)"
-	$(CC) $(CFLAGS) -o test_dns_server test_dns_server.o dns_server.o dns_parser.o dns_builder.o filter.o resolver.o utils.o
+	$(CC) $(CFLAGS) -o test_dns_server $(TEST_DIR)/test_dns_server.o dns_server.o dns_parser.o dns_builder.o filter.o resolver.o utils.o
 
-test_resolver: test_resolver.o resolver.o dns_parser.o utils.o
+test_resolver: $(TEST_DIR)/test_resolver.o resolver.o dns_parser.o utils.o
 	@echo "$(COLOR_YELLOW)Building test_resolver...$(COLOR_RESET)"
-	$(CC) $(CFLAGS) -o test_resolver test_resolver.o resolver.o dns_parser.o utils.o
+	$(CC) $(CFLAGS) -o test_resolver $(TEST_DIR)/test_resolver.o resolver.o dns_parser.o utils.o
 
-test_integration: test_integration.o dns_server.o dns_parser.o dns_builder.o filter.o resolver.o utils.o
+test_integration: $(TEST_DIR)/test_integration.o dns_server.o dns_parser.o dns_builder.o filter.o resolver.o utils.o
 	@echo "$(COLOR_YELLOW)Building test_integration...$(COLOR_RESET)"
-	$(CC) $(CFLAGS) -o test_integration test_integration.o dns_server.o dns_parser.o dns_builder.o filter.o resolver.o utils.o
+	$(CC) $(CFLAGS) -o test_integration $(TEST_DIR)/test_integration.o dns_server.o dns_parser.o dns_builder.o filter.o resolver.o utils.o
 
 
 # DEBUG & MEMORY CHECK

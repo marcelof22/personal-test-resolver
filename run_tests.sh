@@ -1,6 +1,7 @@
 #!/bin/bash
 # run_tests.sh - Spustenie všetkých unit testov
 # Autor: Marcel Feiler (xfeile00)
+# Note: Test source files are in tests/ directory, executables are built in root
 
 set -e  # Exit on error
 
