@@ -44,34 +44,44 @@
      int sockfd;
      struct sockaddr_in server_addr;
      int reuse = 1;
-     
+     struct timeval timeout;
+
      /* Vytvorenie UDP socketu */
      sockfd = socket(AF_INET, SOCK_DGRAM, 0);
      if (sockfd < 0) {
          print_error("Failed to create socket: %s", strerror(errno));
          return -1;
      }
-     
+
      /* SO_REUSEADDR pre rýchly restart servera */
      if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
          print_error("Failed to set SO_REUSEADDR: %s", strerror(errno));
          close(sockfd);
          return -1;
      }
-     
+
+     /* Nastavenie recv timeout pre umožnenie kontroly server_running */
+     timeout.tv_sec = 1;   /* 1 sekunda timeout */
+     timeout.tv_usec = 0;
+     if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
+         print_error("Failed to set SO_RCVTIMEO: %s", strerror(errno));
+         close(sockfd);
+         return -1;
+     }
+
      /* Nastavenie server adresy */
      memset(&server_addr, 0, sizeof(server_addr));
      server_addr.sin_family = AF_INET;
      server_addr.sin_addr.s_addr = INADDR_ANY;  /* Listen na všetkých interfacoch */
      server_addr.sin_port = htons(port);
-     
+
      /* Bind na port */
      if (bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
          print_error("Failed to bind to port %u: %s", port, strerror(errno));
          close(sockfd);
          return -1;
      }
-     
+
      return sockfd;
  }
  
@@ -256,7 +266,12 @@
                  }
                  continue;
              }
-             
+
+             if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                 /* Socket timeout - check server_running flag and continue */
+                 continue;
+             }
+
              print_error("recvfrom() failed: %s", strerror(errno));
              error_count++;
              continue;
