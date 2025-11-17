@@ -409,11 +409,10 @@ void test_filter_trailing_dot() {
     
     // With and without trailing dot
     bool b1 = filter_lookup(filter, "example.com");
-    bool b2 = filter_lookup(filter, "example.com.");
-    
+    (void)filter_lookup(filter, "example.com.");  // b2 depends on implementation
+
     // Both should work (DNS allows trailing dot)
     assert(b1 == true);
-    // b2 depends on implementation
     
     filter_free(filter);
     PASS();
@@ -424,9 +423,8 @@ void test_filter_leading_dot() {
     
     filter_t *filter = filter_init();
     filter_insert(filter, "example.com");
-    
-    bool blocked = filter_lookup(filter, ".example.com");
-    // Should handle gracefully (either block or ignore)
+
+    (void)filter_lookup(filter, ".example.com");  // Should handle gracefully
     
     filter_free(filter);
     PASS();
@@ -436,9 +434,8 @@ void test_filter_multiple_dots() {
     TEST("Multiple consecutive dots");
     
     filter_t *filter = filter_init();
-    
-    int result = filter_insert(filter, "example..com");
-    // Should either reject or handle gracefully
+
+    (void)filter_insert(filter, "example..com");  // Should reject or handle gracefully
     
     filter_free(filter);
     PASS();
@@ -568,10 +565,9 @@ void test_filter_special_chars() {
     // DNS allows hyphens and numbers
     int r1 = filter_insert(filter, "ads-123.example.com");
     assert(r1 == 0);
-    
+
     // Invalid characters should be rejected or handled
-    int r2 = filter_insert(filter, "ads_test.com");  // underscore
-    // Behavior depends on implementation
+    (void)filter_insert(filter, "ads_test.com");  // underscore - behavior depends on implementation
     
     filter_free(filter);
     PASS();
@@ -599,10 +595,9 @@ void test_filter_whitespace() {
     TEST("Domain with whitespace");
     
     filter_t *filter = filter_init();
-    
+
     // Should trim or reject
-    int result = filter_insert(filter, " example.com ");
-    // Behavior depends on implementation
+    (void)filter_insert(filter, " example.com ");  // Behavior depends on implementation
     
     filter_free(filter);
     PASS();
@@ -612,9 +607,8 @@ void test_filter_newline() {
     TEST("Domain with newline");
     
     filter_t *filter = filter_init();
-    
-    int result = filter_insert(filter, "example.com\n");
-    // Should handle gracefully
+
+    (void)filter_insert(filter, "example.com\n");  // Should handle gracefully
     
     filter_free(filter);
     PASS();
