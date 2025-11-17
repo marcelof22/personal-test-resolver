@@ -2,8 +2,6 @@
 # run_tests.sh - Spustenie všetkých unit testov
 # Autor: Marcel Feiler (xfeile00)
 
-# DON'T use "set -e" - we want to continue even if tests fail!
-
 # Farby
 RED='\033[0;31m'
 GREEN='\033[0;32m'
