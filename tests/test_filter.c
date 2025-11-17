@@ -1,6 +1,6 @@
 /**
  * @file test_filter.c
- * @author Marcel (xlogin00)
+ * @author Marcel Feiler (xfeile00)
  * @date 10.11.2025
  * @brief Unit tests for domain filter module (Trie implementation)
  */

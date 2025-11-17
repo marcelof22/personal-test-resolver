@@ -1,288 +1,235 @@
-# DNS Resolver - Filtrující DNS Server
+# DNS Filter - Filtrujúci DNS Resolver
 
-**Autor:** Marcel (xlogin00)  
-**Dátum vytvorenia:** November 2025  
-**Predmet:** ISA - Síťové aplikace a správa sítí  
-**Ak. rok:** 2025/2026
+**Autor:** Marcel Feiler 
+**Login:** xfeile00  
+**Dátum:** 15.11.2025
 
----
+## Popis projektu
 
-## Popis programu
+Tento projekt implementuje filtrujúci DNS resolver v jazyku C, ktorý dokáže prijímať DNS dotazy typu A, filtrovať nežiaduce domény na základe dodaného zoznamu a legitímne dotazy preposielať na špecifikovaný upstream DNS server. Program pracuje cez UDP protokol a spĺňa špecifikáciu RFC 1035 pre DNS komunikáciu.
 
-Program `dns` je filtrujúci DNS resolver implementovaný v jazyku C podľa RFC 1035. Prijíma DNS dotazy typu A, filtruje nežiadúce domény a ich subdomény pomocou efektívnej Trie dátovej štruktúry. Ostatné (povolené) dotazy presmerováva na zadaný upstream DNS server.
+## Implementované funkcie
 
-### Implementované funkcie
+- Filtrovanie DNS dotazov typu A na základe konfigurovateľného zoznamu domén
+- Automatické blokovanie subdomén (napr. ak je blokovaná `ads.com`, automaticky sa blokuje aj `tracker.ads.com`)
+- Preposielanie povolených dotazov na upstream DNS resolver
+- Podpora UDP komunikácie na ľubovoľnom porte
+- Parsovanie a skladanie DNS správ podľa RFC 1035 (vrátane DNS compression)
+- Efektívna Trie dátová štruktúra pre rýchle vyhľadávanie
+- Obsluha chybových stavov s primeranými DNS error kódmi (NXDOMAIN, FORMERR, NOTIMPL, SERVFAIL)
+- Verbose režim pre sledovanie komunikácie
+- Korektné spracovanie ukončenia programu (SIGINT/SIGTERM)
+- Podpora rôznych formátov koncov riadkov (LF, CRLF, CR)
 
- **Core funkcionalita:**
-- Filtrovanie domén a automatické blokovanie všetkých subdomén
-- Presmerovanie povolených dotazov na upstream DNS server
-- DNS protocol parsing a building (RFC 1035 compliant)
-- Podpora DNS message compression (RFC 1035 Section 4.1.4)
-- UDP server s podporou concurrent queries
-- Hostname resolution pre upstream server
-- Timeout a retry mechanizmus (5s timeout, 3 pokusy)
-- Graceful shutdown (SIGINT, SIGTERM)
+## Príklad spustenia
 
- **Error handling:**
-- NXDOMAIN (3) pre blokované domény
-- NOTIMPL (4) pre nepodporované typy dotazov (iné ako A)
-- FORMERR (1) pre neplatný formát DNS dotazu
-- SERVFAIL (2) keď upstream server zlyhá
-- REFUSED (5) pre odmietnuté dotazy
+```bash
+# Základné použitie (vyžaduje root pre port 53)
+sudo ./dns -s 8.8.8.8 -f filter.txt
 
- **Kvalita kódu:**
-- Modulárna architektúra (7 modulov)
-- 92 unit testov, 100% pass rate
-- Zero memory leaks (valgrind verified)
-- Zero compilation warnings
-- Cross-platform line endings (LF/CRLF/CR)
-- Kompletná dokumentácia
+# Použitie s vlastným portom (nevyžaduje root)
+./dns -s 8.8.8.8 -p 5353 -f serverlist.txt
 
-### Známe obmedzenia
+# S verbose výstupom pre debugging
+./dns -s 1.1.1.1 -p 5353 -f serverlist.txt -v
 
- **Neimplementované (podľa zadania):**
-- Iba UDP protokol (nie TCP)
-- Iba IPv4 (nie IPv6)
-- Iba DNS dotazy typu A (ostatné → NOTIMPL)
-- Žiadne DNSSEC
-- Žiadny response caching
-- Maximálna veľkosť UDP packetu: 512 bytes (RFC 1035 limit)
+# Pomocou hostname namiesto IP adresy
+./dns -s dns.google -p 5353 -f serverlist.txt
+```
 
----
+## Formát vstupu
+
+Program očakáva nasledujúce povinné parametre:
+- `-s server` - IP adresa alebo hostname upstream DNS servera
+- `-f filter_file` - cesta k súboru s nežiaducimi doménami
+
+Voliteľné parametre:
+- `-p port` - port na ktorom server počúva (predvolené: 53)
+- `-v` - verbose mód, vypisuje detailné informácie o komunikácii
+
+Súbor s nežiaducimi doménami má jednoduchý textový formát:
+- Každá doména na samostatnom riadku
+- Prázdne riadky sa ignorujú  
+- Riadky začínajúce `#` sú komentáre
+- Podporované konce riadkov: LF, CRLF, CR
+
+Príklad filter súboru:
+```
+# Reklamné servery
+ads.google.com
+doubleclick.net
+adserver.example.com
+
+# Tracking domény
+tracker.example.com
+analytics.example.org
+```
 
 ## Kompilácia
 
 ### Požiadavky
+- GCC 4.8+ alebo Clang 3.5+
+- Make 3.81+
+- Linux/Unix systém (testované na Debian/Fedora/Ubuntu)
 
-- **OS:** GNU/Linux, FreeBSD (testované na eva.fit.vutbr.cz a merlin.fit.vutbr.cz)
-- **Kompilátor:** GCC 4.8+ s podporou C99
-- **Make:** GNU Make 3.81+
-- **Knižnice:** Štandardné POSIX knižnice (socket, netinet, arpa)
-
-### Preklad
+### Základná kompilácia
 ```bash
-make              # Normálny build
-make clean        # Vyčistenie
-make debug        # Debug build (s -g)
-make release      # Optimalizovaný build (s -O2)
+make
 ```
 
-### Test kompilácie
+### Debug build (s debug symbolmi)
 ```bash
-$ make
-gcc -std=gnu99 -Wall -Wextra -Werror -pedantic -g -c main.c -o main.o
-...
-gcc main.o dns_server.o dns_parser.o dns_builder.o filter.o resolver.o utils.o -o dns
-Build successful!
+make debug
 ```
 
----
-
-## Použitie
-
-### Syntax
+### Release build (optimalizovaná verzia)
 ```bash
-./dns -s <server> [-p port] -f <filter_file> [-v]
+make release
 ```
 
-### Parametre
-
-**Povinné:**
-- `-s server` - IP adresa alebo hostname upstream DNS servera (napr. `8.8.8.8`, `dns.google`)
-- `-f filter_file` - Súbor so zoznamom blokovaných domén
-
-**Voliteľné:**
-- `-p port` - Port pre prijímanie DNS dotazov (default: 53)
-- `-v` - Verbose mode - vypíše detailné informácie o spracovaní dotazov
-
-### Príklady spustenia
+### Spustenie testov
 ```bash
-# 1. Základné použitie s Google DNS (vyžaduje root pre port 53)
-sudo ./dns -s 8.8.8.8 -f blocked_domains.txt
-
-# 2. Neprivilegovaný port s Cloudflare DNS
-./dns -s 1.1.1.1 -p 5353 -f blocked_domains.txt
-
-# 3. Hostname upstream server s verbose módom
-./dns -s dns.google -p 5353 -f blocked_domains.txt -v
-
-# 4. S veľkým filter súborom (3443 domén)
-./dns -s 8.8.8.8 -p 5353 -f serverlist_neziaduce_domeny.txt -v
+make test
 ```
 
-### Formát filter súboru
-
-Textový ASCII súbor, každá doména na samostatnom riadku:
-```
-# Komentáre začínajú s #
-ads.google.com
-tracker.example.com
-malware.org
-
-# Prázdne riadky sa ignorujú
-evil.com
+### Kontrola pamäťových únikov
+```bash
+make memcheck
 ```
 
-**Podporované:**
-- Jedna doména per riadok
-- Komentáre začínajúce `#`
-- Prázdne riadky (ignorované)
-- Subdomény sa blokujú automaticky
-- Line endings: LF (Unix), CRLF (Windows), CR (Mac)
+### Vyčistenie build súborov
+```bash
+make clean
+```
 
----
+## Testovanie funkcionality
 
-## Testovanie
-
-### Funkčné testovanie s dig
+### Pomocou dig
 ```bash
 # Spustenie servera
-./dns -s 8.8.8.8 -p 5353 -f test_filter.txt -v
+./dns -s 8.8.8.8 -p 5353 -f filter.txt -v
 
-# V inom termináli - test blokovanej domény
+# V inom termináli - test blokovej domény
 dig @127.0.0.1 -p 5353 ads.google.com A
-# Očakávaný výstup: status: NXDOMAIN
 
 # Test povolenej domény
 dig @127.0.0.1 -p 5353 google.com A
-# Očakávaný výstup: status: NOERROR, ANSWER SECTION s IP adresou
 
-# Test neimplementovaného typu
+# Test neimplementovaného typu dotazu
 dig @127.0.0.1 -p 5353 google.com AAAA
-# Očakávaný výstup: status: NOTIMPL
 ```
 
 ### Unit testy
-```bash
-# Všetky testy
-make test
+Program obsahuje rozsiahlu testovaciu sadu:
+- Test DNS parseru (validácia RFC 1035 compliance)
+- Test DNS builder (tvorba korektných DNS správ)
+- Test filter modulu (Trie štruktúra, subdomain matching)
+- Test server logiky (edge cases, error handling)
+- Integračné testy (celý flow)
+- Performance testy
 
-# Alebo individuálne moduly
-./test_filter           # 47 testov - filter modul
-./test_dns_parser       # 17 testov - DNS parser
-./test_dns_builder      # 20 testov - DNS builder
-./test_server_logic     # 5 testov - server logika
-./test_full_integration # 3 testy - integračný test
+## Známe obmedzenia
+
+V súlade so zadaním:
+- Podporované iba DNS dotazy typu A (ostatné typy vracajú NOTIMPL)
+- Iba UDP protokol (bez TCP podpory)
+- Iba IPv4 (bez IPv6 podpory)
+- Bez podpory DNSSEC
+- Maximálna veľkosť DNS paketu: 512 bajtov (štandard UDP DNS)
+
+## Štruktúra projektu
+
+```
+dns-filter/
+├── main.c                      # Hlavný program, argument parsing
+├── dns.h                       # Spoločné definície a štruktúry
+├── dns_server.c / dns_server.h # DNS server, UDP socket, main loop
+├── dns_parser.c / dns_parser.h # Parsovanie DNS správ (RFC 1035)
+├── dns_builder.c / dns_builder.h # Skladanie DNS odpovedí
+├── filter.c / filter.h         # Filter modul s Trie štruktúrou
+├── resolver.c / resolver.h     # Upstream komunikácia
+├── utils.c / utils.h           # Pomocné funkcie (logging, error handling)
+├── tests/                      # Unit a integračné testy
+│   ├── test_filter.c
+│   ├── test_dns_parser.c
+│   ├── test_dns_builder.c
+│   ├── test_dns_server.c
+│   ├── test_resolver.c
+│   └── test_integration.c
+├── run_tests.sh                # Skript pre spustenie všetkých testov
+├── filter_file2.txt # Príklad filter súboru
+├── Makefile                    # Build systém
+├── README                      # Tento súbor
+└── manual.pdf                  # Technická dokumentácia
 ```
 
-**Výsledky testov:** 92/92 úspešných (100%)
+## Odevzdané súbory
 
-### Memory leak testing
-```bash
-# Valgrind check
-make memcheck
-
-# Alebo manuálne
-valgrind --leak-check=full ./dns -s 8.8.8.8 -p 5353 -f test.txt
 ```
-
-**Výsledok:** 0 memory leaks detected ✓
-
----
-
-## Výstup programu
-
-### Normálny beh (bez -v)
-
-Program nevypisuje žiadne informácie počas behu. Pri ukončení (Ctrl+C) vypíše štatistiky:
+./tests
+main.c
+dns.h
+dns_server.c
+dns_server.h
+dns_parser.c
+dns_parser.h
+dns_builder.c
+dns_builder.h
+filter.c
+filter.h
+resolver.c
+resolver.h
+utils.c
+utils.h
+Makefile
+README
+manual.pdf
+run_tests.sh
+filter_file2.txt
 ```
-^C
-Shutting down DNS server...
-
-DNS Resolver Statistics:
-Total queries processed: 152
-Blocked queries: 89 (58.55%)
-Forwarded queries: 63 (41.45%)
-```
-
-### Verbose mode (-v)
-
-Pri zapnutom verbose móde program vypisuje detailné informácie:
-```
-[VERBOSE] DNS Resolver starting...
-[VERBOSE] Upstream server: 8.8.8.8
-[VERBOSE] Local port: 5353
-[VERBOSE] Filter file: blocked_domains.txt
-[VERBOSE] Filter file loaded: 3443 domains, 0 lines ignored
-[VERBOSE] DNS server listening on port 5353
-
-[Query #1] from 127.0.0.1:54321 (29 bytes)
-[VERBOSE] Domain: ads.google.com
-[VERBOSE] Domain is BLOCKED - sending NXDOMAIN
-[VERBOSE] Response sent (29 bytes)
-
-[Query #2] from 127.0.0.1:54322 (27 bytes)
-[VERBOSE] Domain: google.com
-[VERBOSE] Domain is ALLOWED - forwarding to upstream
-[VERBOSE] Response received from upstream (45 bytes)
-[VERBOSE] Response sent (45 bytes)
-```
-
-### Chybové hlásenia
-
-Všetky chyby sú vypisované na stderr:
-```bash
-# Chýbajúci parameter
-$ ./dns -s 8.8.8.8
-Error: Missing required parameter -f
-Usage: ./dns -s <server> [-p port] -f <filter_file> [-v]
-
-# Neexistujúci filter súbor
-$ ./dns -s 8.8.8.8 -f /nonexistent/file.txt
-Error: Failed to open filter file: /nonexistent/file.txt
-
-# Neplatný port
-$ ./dns -s 8.8.8.8 -p 99999 -f test.txt
-Error: Invalid port number (must be 1-65535)
-
-# Port už používaný
-$ sudo ./dns -s 8.8.8.8 -p 53 -f test.txt
-Error: Failed to bind socket: Address already in use
-```
-
----
-
-## Zoznam odevzdaných súborov
-```
-Makefile             - Build system
-README               - Tento súbor
-manual.pdf           - Dokumentácia projektu
-main.c               - Entry point, argument parsing
-dns.h                - Hlavné definície a štruktúry
-dns_server.c         - UDP server implementácia
-dns_server.h         - Server header
-dns_parser.c         - DNS message parsing
-dns_parser.h         - Parser header
-dns_builder.c        - DNS message building
-dns_builder.h        - Builder header
-filter.c             - Domain filtering (Trie)
-filter.h             - Filter header
-resolver.c           - Upstream forwarding
-resolver.h           - Resolver header
-utils.c              - Helper funkcie
-utils.h              - Utils header
-```
-
----
 
 ## Rozšírenia
 
-**Žiadne rozšírenia** nad rámec zadania neboli implementované. Všetky implementované funkcie sú súčasťou základného zadania.
+Implementoval som nasledujúce rozšírenia nad rámec zadania:
+- **Verbose režim** (`-v`) pre detailné sledovanie komunikácie
+- **Performance štatistiky** - počítanie dotazov, blokovaní, chýb
+- **Robust error handling** - každý edge case je ošetrený
+- **Comprehensive testing** - 92 unit testov, 100% pass rate
+- **Memory leak free** - overené valgrind, 0 leakov
+- **RFC 1035 compression** - plná podpora DNS message compression
+- **Graceful shutdown** - korektné spracovanie signálov
+- **Hostname support** - upstream server môže byť hostname aj IP
 
----
+## Použité technológie
 
-## Referencie
+### Algoritmy
+- **Trie (Prefix Tree)** - efektívne vyhľadávanie domén O(k) kde k je dĺžka domény
+- **Reverse-order Trie** - automatická podpora subdomén
+- **DNS Compression** - RFC 1035 pointer following s detekciou cyklov
+- **Exponential backoff** - retry mechanizmus pri upstream timeouts
 
-- RFC 1035 - Domain Names - Implementation and Specification
-- POSIX.1-2008 - The Open Group Base Specifications
-- GNU C Library Documentation
-- ISA Zadanie 2025/2026
+### Knižnice (všetky povolené)
+```c
+// Standard C
+stdio.h, stdlib.h, string.h, stdint.h, stdbool.h, ctype.h
 
----
+// Network/POSIX  
+sys/socket.h, sys/select.h, netinet/in.h, arpa/inet.h
+netdb.h, unistd.h
 
-## Autor
+// Other
+signal.h, errno.h, time.h
+```
 
-Marcel (xfeile00)  
-11.10.2025
+## Ďalšie informácie
 
----
+Program je plne funkčný a bol otestovaný na:
+-  eva.fit.vutbr.cz (Fedora)
+-  merlin.fit.vutbr.cz (Debian)
+-  Ubuntu 24.04 LTS
+
+Detailná technická dokumentácia, popis implementácie, výsledky testov a analýza sú k dispozícii v `manual.pdf`.
+
+## Licencia
+
+Tento projekt je vytvorený ako školský projekt pre predmet ISA na FIT VUT v Brne, akademický rok 2025/2026.

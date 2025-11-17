@@ -1,7 +1,7 @@
 /**
  * @file test_integration.c
- * @author Marcel (xlogin00)
- * @date November 2025
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
  * @brief Integration tests for DNS resolver
  */
 
