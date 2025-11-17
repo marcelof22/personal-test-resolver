@@ -1,9 +1,8 @@
 #!/bin/bash
 # run_tests.sh - Spustenie všetkých unit testov
 # Autor: Marcel Feiler (xfeile00)
-# Note: Test source files are in tests/ directory, executables are built in root
 
-set -e  # Exit on error
+# DON'T use "set -e" - we want to continue even if tests fail!
 
 # Farby
 RED='\033[0;31m'
@@ -19,8 +18,13 @@ echo ""
 
 # Kompilácia testov
 echo -e "${YELLOW}[1/2] Compiling tests...${NC}"
-make -s test_filter test_dns_parser test_dns_builder test_dns_server test_resolver test_integration
-echo -e "${GREEN}✓ Compilation successful${NC}"
+if make -s test_filter test_dns_parser test_dns_builder test_dns_server test_resolver test_integration 2>&1; then
+    echo -e "${GREEN} Compilation successful${NC}"
+else
+    echo -e "${RED} Compilation failed!${NC}"
+    echo "Run 'make' to see detailed errors"
+    exit 1
+fi
 echo ""
 
 # Spustenie testov
@@ -30,75 +34,82 @@ echo ""
 TOTAL_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
+FAILED_SUITES=0
 
 # Test 1: Filter
 echo -e "${BLUE}[1/6] Filter Module Tests${NC}"
-if ./test_filter; then
+if ./test_filter 2>&1; then
     PASSED_TESTS=$((PASSED_TESTS + 47))
-    echo -e "${GREEN}✓ Filter: 47/47 passed${NC}"
+    echo -e "${GREEN} Filter: 47/47 passed${NC}"
 else
-    FAILED_TESTS=$((FAILED_TESTS + 1))
-    echo -e "${RED}✗ Filter: FAILED${NC}"
+    FAILED_TESTS=$((FAILED_TESTS + 47))
+    FAILED_SUITES=$((FAILED_SUITES + 1))
+    echo -e "${RED} Filter: FAILED${NC}"
 fi
 TOTAL_TESTS=$((TOTAL_TESTS + 47))
 echo ""
 
 # Test 2: DNS Parser
 echo -e "${BLUE}[2/6] DNS Parser Tests${NC}"
-if ./test_dns_parser; then
+if ./test_dns_parser 2>&1; then
     PASSED_TESTS=$((PASSED_TESTS + 17))
-    echo -e "${GREEN}✓ DNS Parser: 17/17 passed${NC}"
+    echo -e "${GREEN} DNS Parser: 17/17 passed${NC}"
 else
-    FAILED_TESTS=$((FAILED_TESTS + 1))
-    echo -e "${RED}✗ DNS Parser: FAILED${NC}"
+    FAILED_TESTS=$((FAILED_TESTS + 17))
+    FAILED_SUITES=$((FAILED_SUITES + 1))
+    echo -e "${RED} DNS Parser: FAILED${NC}"
 fi
 TOTAL_TESTS=$((TOTAL_TESTS + 17))
 echo ""
 
 # Test 3: DNS Builder
 echo -e "${BLUE}[3/6] DNS Builder Tests${NC}"
-if ./test_dns_builder; then
+if ./test_dns_builder 2>&1; then
     PASSED_TESTS=$((PASSED_TESTS + 20))
-    echo -e "${GREEN}✓ DNS Builder: 20/20 passed${NC}"
+    echo -e "${GREEN} DNS Builder: 20/20 passed${NC}"
 else
-    FAILED_TESTS=$((FAILED_TESTS + 1))
-    echo -e "${RED}✗ DNS Builder: FAILED${NC}"
+    FAILED_TESTS=$((FAILED_TESTS + 20))
+    FAILED_SUITES=$((FAILED_SUITES + 1))
+    echo -e "${RED} DNS Builder: FAILED${NC}"
 fi
 TOTAL_TESTS=$((TOTAL_TESTS + 20))
 echo ""
 
 # Test 4: DNS Server
 echo -e "${BLUE}[4/6] DNS Server Tests${NC}"
-if ./test_dns_server; then
+if ./test_dns_server 2>&1; then
     PASSED_TESTS=$((PASSED_TESTS + 5))
-    echo -e "${GREEN}✓ DNS Server: 5/5 passed${NC}"
+    echo -e "${GREEN} DNS Server: 5/5 passed${NC}"
 else
-    FAILED_TESTS=$((FAILED_TESTS + 1))
-    echo -e "${RED}✗ DNS Server: FAILED${NC}"
+    FAILED_TESTS=$((FAILED_TESTS + 5))
+    FAILED_SUITES=$((FAILED_SUITES + 1))
+    echo -e "${RED} DNS Server: FAILED${NC}"
 fi
 TOTAL_TESTS=$((TOTAL_TESTS + 5))
 echo ""
 
 # Test 5: Resolver
 echo -e "${BLUE}[5/6] Resolver Tests${NC}"
-if ./test_resolver; then
+if ./test_resolver 2>&1; then
     PASSED_TESTS=$((PASSED_TESTS + 5))
-    echo -e "${GREEN}✓ Resolver: 5/5 passed${NC}"
+    echo -e "${GREEN} Resolver: 5/5 passed${NC}"
 else
-    FAILED_TESTS=$((FAILED_TESTS + 1))
-    echo -e "${RED}✗ Resolver: FAILED${NC}"
+    FAILED_TESTS=$((FAILED_TESTS + 5))
+    FAILED_SUITES=$((FAILED_SUITES + 1))
+    echo -e "${RED} Resolver: FAILED${NC}"
 fi
 TOTAL_TESTS=$((TOTAL_TESTS + 5))
 echo ""
 
 # Test 6: Integration
 echo -e "${BLUE}[6/6] Integration Tests${NC}"
-if ./test_integration; then
+if ./test_integration 2>&1; then
     PASSED_TESTS=$((PASSED_TESTS + 3))
-    echo -e "${GREEN}✓ Integration: 3/3 passed${NC}"
+    echo -e "${GREEN} Integration: 3/3 passed${NC}"
 else
-    FAILED_TESTS=$((FAILED_TESTS + 1))
-    echo -e "${RED}✗ Integration: FAILED${NC}"
+    FAILED_TESTS=$((FAILED_TESTS + 3))
+    FAILED_SUITES=$((FAILED_SUITES + 1))
+    echo -e "${RED} Integration: FAILED${NC}"
 fi
 TOTAL_TESTS=$((TOTAL_TESTS + 3))
 echo ""
@@ -121,6 +132,7 @@ echo ""
 echo -e "Results:"
 echo -e "  Passed:             ${GREEN}${PASSED_TESTS}${NC} tests"
 echo -e "  Failed:             ${RED}${FAILED_TESTS}${NC} tests"
+echo -e "  Failed Suites:      ${RED}${FAILED_SUITES}${NC} / 6"
 
 # Výpočet úspešnosti
 if [ $TOTAL_TESTS -gt 0 ]; then
@@ -132,12 +144,23 @@ echo -e "${BLUE}═════════════════════�
 
 if [ $FAILED_TESTS -eq 0 ]; then
     echo ""
-    echo -e "${GREEN}✓ ALL TESTS PASSED!${NC}"
+    echo -e "${GREEN} ALL TESTS PASSED! ${NC}"
     echo ""
     exit 0
 else
     echo ""
-    echo -e "${RED}✗ SOME TESTS FAILED!${NC}"
+    echo -e "${RED} SOME TESTS FAILED! ${NC}"
+    echo ""
+    echo "Failed test suites: $FAILED_SUITES"
+    echo "Run individual tests to see details:"
+    if [ $FAILED_SUITES -gt 0 ]; then
+        echo "  ./test_filter"
+        echo "  ./test_dns_parser"
+        echo "  ./test_dns_builder"
+        echo "  ./test_dns_server"
+        echo "  ./test_resolver"
+        echo "  ./test_integration"
+    fi
     echo ""
     exit 1
 fi
