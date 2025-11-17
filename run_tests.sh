@@ -107,9 +107,28 @@ echo ""
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${BLUE}                    TEST SUMMARY${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
-echo -e "Total Tests:    ${TOTAL_TESTS}"
-echo -e "Passed:         ${GREEN}${PASSED_TESTS}${NC}"
-echo -e "Failed:         ${RED}${FAILED_TESTS}${NC}"
+echo ""
+echo -e "Test Suites:"
+echo -e "  Filter Module:      47 tests"
+echo -e "  DNS Parser:         17 tests"
+echo -e "  DNS Builder:        20 tests"
+echo -e "  DNS Server:          5 tests"
+echo -e "  Resolver:            5 tests"
+echo -e "  Integration:         3 tests"
+echo -e "${BLUE}───────────────────────────────────────────────────────────${NC}"
+echo -e "  Total:              ${TOTAL_TESTS} tests"
+echo ""
+echo -e "Results:"
+echo -e "  Passed:             ${GREEN}${PASSED_TESTS}${NC} tests"
+echo -e "  Failed:             ${RED}${FAILED_TESTS}${NC} tests"
+
+# Výpočet úspešnosti
+if [ $TOTAL_TESTS -gt 0 ]; then
+    SUCCESS_RATE=$(awk "BEGIN {printf \"%.1f\", ($PASSED_TESTS / $TOTAL_TESTS) * 100}")
+    echo -e "  Success Rate:       ${SUCCESS_RATE}%"
+fi
+
+echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 
 if [ $FAILED_TESTS -eq 0 ]; then
     echo ""
