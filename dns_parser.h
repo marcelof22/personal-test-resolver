@@ -71,7 +71,29 @@ void free_dns_message(dns_message_t *message);
  * - Circular pointers (nekonečná slučka)
  * - Pointer na neplatnú pozíciu
  */
-int parse_dns_name(const uint8_t *buffer, size_t len, size_t *offset, 
+int parse_dns_name(const uint8_t *buffer, size_t len, size_t *offset,
                    char *name, size_t name_len);
+
+/* ============================================================================
+ * WRAPPER API PRE INTEGRATION TESTY
+ * ============================================================================ */
+
+/**
+ * @brief Simplified query structure for integration tests
+ */
+typedef struct {
+    char qname[DNS_MAX_NAME_LEN + 1];
+    uint16_t qtype;
+    uint16_t qclass;
+} dns_query_t;
+
+/**
+ * @brief Parse DNS query (simplified wrapper for tests)
+ * @param buffer Query buffer
+ * @param len Buffer length
+ * @param query Output query structure
+ * @return 0 on success, -1 on error
+ */
+int dns_parse_query(const uint8_t *buffer, size_t len, dns_query_t *query);
 
 #endif /* DNS_PARSER_H */

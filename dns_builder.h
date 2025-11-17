@@ -54,4 +54,21 @@ int build_dns_header(uint8_t *buffer, const dns_header_t *header);
  */
 int encode_dns_name(const char *domain, uint8_t *buffer, size_t buf_len);
 
+/* ============================================================================
+ * WRAPPER API PRE INTEGRATION TESTY
+ * ============================================================================ */
+
+/**
+ * @brief Build DNS error response (simplified wrapper for tests)
+ * @param query_buffer Original query buffer
+ * @param query_len Query length
+ * @param response_buffer Output response buffer
+ * @param response_max_len Maximum response buffer size
+ * @param rcode Response code (NXDOMAIN, SERVFAIL, etc.)
+ * @return Response length on success, 0 on error
+ */
+uint16_t dns_build_error_response(const uint8_t *query_buffer, size_t query_len,
+                                   uint8_t *response_buffer, size_t response_max_len,
+                                   uint8_t rcode);
+
 #endif /* DNS_BUILDER_H */

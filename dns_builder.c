@@ -215,3 +215,46 @@ int encode_dns_name(const char *domain, uint8_t *buffer, size_t buf_len) {
     free(domain_copy);
     return bytes_written;
 }
+
+/* ============================================================================
+ * WRAPPER API PRE INTEGRATION TESTY
+ * ============================================================================ */
+
+/**
+ * @brief Build DNS error response (simplified wrapper for tests)
+ */
+uint16_t dns_build_error_response(const uint8_t *query_buffer, size_t query_len,
+                                   uint8_t *response_buffer, size_t response_max_len,
+                                   uint8_t rcode) {
+    if (!query_buffer || !response_buffer || query_len == 0 || response_max_len == 0) {
+        return 0;
+    }
+
+    /* Parse query first */
+    dns_message_t query;
+    if (parse_dns_message(query_buffer, query_len, &query) != 0) {
+        return 0;
+    }
+
+    /* Build error response using internal API */
+    uint8_t *response = NULL;
+    size_t resp_len = 0;
+
+    if (build_error_response(&query, rcode, &response, &resp_len) != 0) {
+        free_dns_message(&query);
+        return 0;
+    }
+
+    /* Copy to output buffer if it fits */
+    if (resp_len > response_max_len) {
+        free(response);
+        free_dns_message(&query);
+        return 0;
+    }
+
+    memcpy(response_buffer, response, resp_len);
+    free(response);
+    free_dns_message(&query);
+
+    return (uint16_t)resp_len;
+}
