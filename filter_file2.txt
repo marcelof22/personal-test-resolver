@@ -1,0 +1,16 @@
+ads.google.com
+doubleclick.net
+googleadservices.com
+googlesyndication.com
+google-analytics.com
+analytics.facebook.com
+facebook-pixel.com
+tracker.example.com
+pixel.advertising.com
+malware.test
+phishing.test
+dangerous.org
+single
+very.long.subdomain.with.many.labels.example.com
+test-hyphen.com
+test123.org
