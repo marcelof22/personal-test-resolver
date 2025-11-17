@@ -92,37 +92,52 @@ int build_error_response(const dns_message_t *query, uint8_t rcode,
     resp_header.nscount = 0;  /* Žiadne authority */
     resp_header.arcount = 0;  /* Žiadne additional */
 
-    /* Zapíšeme header do bufferu */
-    uint8_t *ptr = *response;
-
-    /* ID - 2 bajty */
-    ptr[0] = (resp_header.id >> 8) & 0xFF;
-    ptr[1] = resp_header.id & 0xFF;
-
-    /* Flags - 2 bajty */
-    ptr[2] = (resp_header.flags >> 8) & 0xFF;
-    ptr[3] = resp_header.flags & 0xFF;
-
-    /* QDCOUNT - 2 bajty */
-    ptr[4] = (resp_header.qdcount >> 8) & 0xFF;
-    ptr[5] = resp_header.qdcount & 0xFF;
-
-    /* ANCOUNT - 2 bajty */
-    ptr[6] = (resp_header.ancount >> 8) & 0xFF;
-    ptr[7] = resp_header.ancount & 0xFF;
-
-    /* NSCOUNT - 2 bajty */
-    ptr[8] = (resp_header.nscount >> 8) & 0xFF;
-    ptr[9] = resp_header.nscount & 0xFF;
-
-    /* ARCOUNT - 2 bajty */
-    ptr[10] = (resp_header.arcount >> 8) & 0xFF;
-    ptr[11] = resp_header.arcount & 0xFF;
+    /* Zapíšeme header do bufferu pomocou build_dns_header */
+    if (build_dns_header(*response, &resp_header) != 0) {
+        free(*response);
+        *response = NULL;
+        return -1;
+    }
 
     /* Skopírujeme question section z pôvodného query */
     memcpy(*response + DNS_HEADER_SIZE,
            query->raw_data + DNS_HEADER_SIZE,
            question_size);
+
+    return 0;
+}
+
+/**
+ * @brief Vytvorí DNS header do bufferu
+ */
+int build_dns_header(uint8_t *buffer, const dns_header_t *header) {
+    if (!buffer || !header) {
+        return -1;
+    }
+
+    /* ID - 2 bajty */
+    buffer[0] = (header->id >> 8) & 0xFF;
+    buffer[1] = header->id & 0xFF;
+
+    /* Flags - 2 bajty */
+    buffer[2] = (header->flags >> 8) & 0xFF;
+    buffer[3] = header->flags & 0xFF;
+
+    /* QDCOUNT - 2 bajty */
+    buffer[4] = (header->qdcount >> 8) & 0xFF;
+    buffer[5] = header->qdcount & 0xFF;
+
+    /* ANCOUNT - 2 bajty */
+    buffer[6] = (header->ancount >> 8) & 0xFF;
+    buffer[7] = header->ancount & 0xFF;
+
+    /* NSCOUNT - 2 bajty */
+    buffer[8] = (header->nscount >> 8) & 0xFF;
+    buffer[9] = header->nscount & 0xFF;
+
+    /* ARCOUNT - 2 bajty */
+    buffer[10] = (header->arcount >> 8) & 0xFF;
+    buffer[11] = header->arcount & 0xFF;
 
     return 0;
 }

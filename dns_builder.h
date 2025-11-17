@@ -28,17 +28,25 @@ int build_error_response(const dns_message_t *query, uint8_t rcode,
                          uint8_t **response, size_t *resp_len);
 
 /**
+ * @brief Vytvorí DNS header do bufferu
+ * @param buffer Buffer pre header (min 12 bajtov)
+ * @param header DNS header štruktúra
+ * @return 0 pri úspechu, -1 pri chybe
+ */
+int build_dns_header(uint8_t *buffer, const dns_header_t *header);
+
+/**
  * @brief Zakóduje doménové meno do DNS formátu
  * @param domain Doménové meno (napr. "www.google.com")
  * @param buffer Výstupný buffer
  * @param buf_len Veľkosť bufferu
  * @return Počet zapísaných bajtov, -1 pri chybe
- * 
+ *
  * Formát podľa RFC 1035 Section 3.1:
  * - Každý label prefixovaný svojou dĺžkou
  * - Ukončené nulou
  * - Príklad: "www.google.com" -> 3www6google3com0
- * 
+ *
  * Edge cases:
  * - Prázdna doména
  * - Label dlhší ako 63 znakov
