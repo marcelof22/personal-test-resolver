@@ -123,7 +123,7 @@ debug: clean all
 memcheck: $(TARGET)
 	@echo "$(COLOR_BLUE)Running Valgrind memory check...$(COLOR_RESET)"
 	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
-		--verbose --log-file=valgrind.log ./$(TARGET) -s 8.8.8.8 -f serverlist_neziaduce_domeny.txt || true
+		--verbose --log-file=valgrind.log ./$(TARGET) -s 8.8.8.8 -f filter_file2.txt || true
 	@echo "$(COLOR_YELLOW)Check valgrind.log for details$(COLOR_RESET)"
 
 

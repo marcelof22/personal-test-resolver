@@ -272,7 +272,7 @@ int main(int argc, char *argv[]) {
     printf("\n" COLOR_YELLOW "[INFO]" COLOR_RESET " Server should be running on %s:%d\n", 
            TEST_SERVER, TEST_PORT);
     printf(COLOR_YELLOW "[INFO]" COLOR_RESET " Start server manually:\n");
-    printf("  sudo ./dns -s 8.8.8.8 -p %d -f filter_file2.txt -v\n", TEST_PORT);
+    printf("  ./dns -s 8.8.8.8 -p %d -f filter_file2.txt -v\n", TEST_PORT);
     printf("\nPress Enter when server is ready...");
     getchar();
     
