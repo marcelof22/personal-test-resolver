@@ -119,13 +119,23 @@
      while (i > 0 && normalized[i - 1] == '.') {
          i--;
      }
-     
+
      /* Doména iba z bodiek */
      if (i == 0) {
          return -1;
      }
-     
+
      normalized[i] = '\0';
+
+     /* Kontrola consecutive dots a leading dot */
+     for (size_t j = 0; j < i; j++) {
+         if (normalized[j] == '.') {
+             if (j == 0 || (j + 1 < i && normalized[j + 1] == '.')) {
+                 return -1;  /* Leading dot alebo consecutive dots */
+             }
+         }
+     }
+
      return 0;
  }
  
