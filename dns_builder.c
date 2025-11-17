@@ -2,56 +2,201 @@
  * @file dns_builder.c
  * @author Marcel Feiler (xfeile00)
  * @date 10.11.2025
- * @brief Filtering DNS Resolver
+ * @brief Filtering DNS Resolver - DNS Response Builder
  */
 
- #ifndef DNS_BUILDER_H
- #define DNS_BUILDER_H
- 
- #include "dns.h"
- 
- /**
-  * @brief Vytvorí chybovú DNS odpoveď
-  * @param query Pôvodný DNS dotaz
-  * @param rcode Response code (FORMERR, NXDOMAIN, NOTIMPL, atď.)
-  * @param response Výstupný buffer pre odpoveď (alokuje sa)
-  * @param resp_len Dĺžka odpovede
-  * @return 0 pri úspechu, -1 pri chybe
-  * 
-  * Vytvorí odpoveď s:
-  * - QR=1 (response)
-  * - RCODE=zadaný kód
-  * - Skopíruje question section z dotazu
-  * - Žiadne answer/authority/additional sections
-  */
- int build_error_response(const dns_message_t *query, uint8_t rcode, 
-                          uint8_t **response, size_t *resp_len);
- 
- /**
-  * @brief Zakóduje doménové meno do DNS formátu
-  * @param domain Doménové meno (napr. "www.google.com")
-  * @param buffer Výstupný buffer
-  * @param buf_len Veľkosť bufferu
-  * @return Počet zapísaných bajtov, -1 pri chybe
-  * 
-  * Formát podľa RFC 1035 Section 3.1:
-  * - Každý label prefixovaný svojou dĺžkou
-  * - Ukončené nulou
-  * - Príklad: "www.google.com" -> 3www6google3com0
-  * 
-  * Edge cases:
-  * - Prázdna doména
-  * - Label dlhší ako 63 znakov
-  * - Celková dĺžka > 255 znakov
-  */
- int encode_dns_name(const char *domain, uint8_t *buffer, size_t buf_len);
- 
- /**
-  * @brief Vytvorí DNS header do bufferu
-  * @param buffer Buffer pre header (min 12 bajtov)
-  * @param header DNS header štruktúra
-  * @return 0 pri úspechu, -1 pri chybe
-  */
- int build_dns_header(uint8_t *buffer, const dns_header_t *header);
- 
- #endif /* DNS_BUILDER_H */
+#include "dns_builder.h"
+#include "dns_parser.h"
+#include <stdlib.h>
+#include <string.h>
+#include <arpa/inet.h>
+
+/**
+ * @brief Vytvorí chybovú DNS odpoveď
+ */
+int build_error_response(const dns_message_t *query, uint8_t rcode,
+                         uint8_t **response, size_t *resp_len) {
+    if (!query || !response || !resp_len) {
+        return -1;
+    }
+
+    /* Validácia RCODE (0-5 podľa RFC 1035) */
+    if (rcode > DNS_RCODE_REFUSED) {
+        return -1;
+    }
+
+    /* Potrebujeme: header + question section */
+    size_t question_size = 0;
+
+    /* Vypočítame veľkosť question section z raw_data */
+    if (query->raw_data && query->raw_len > DNS_HEADER_SIZE) {
+        /* Question section začína za headerom */
+        const uint8_t *qname_ptr = query->raw_data + DNS_HEADER_SIZE;
+        const uint8_t *data_end = query->raw_data + query->raw_len;
+
+        /* Prejdi cez QNAME (zakončené nulou) */
+        while (qname_ptr < data_end && *qname_ptr != 0) {
+            uint8_t label_len = *qname_ptr;
+
+            /* Kompresia nie je povolená v question section */
+            if (label_len >= 64) {
+                return -1;
+            }
+
+            qname_ptr += label_len + 1;
+        }
+
+        if (qname_ptr >= data_end) {
+            return -1;
+        }
+
+        /* +1 pre nulovú bajt, +4 pre QTYPE a QCLASS */
+        qname_ptr += 5;
+
+        if (qname_ptr > data_end) {
+            return -1;
+        }
+
+        question_size = qname_ptr - (query->raw_data + DNS_HEADER_SIZE);
+    } else {
+        return -1;
+    }
+
+    /* Alokujeme buffer pre odpoveď */
+    *resp_len = DNS_HEADER_SIZE + question_size;
+    *response = (uint8_t *)malloc(*resp_len);
+
+    if (!*response) {
+        return -1;
+    }
+
+    /* Vytvoríme header */
+    dns_header_t resp_header;
+    resp_header.id = query->header.id;  /* Rovnaké ID ako v query */
+
+    /* Nastavíme flags:
+     * - QR=1 (response)
+     * - Opcode=0 (standard query)
+     * - AA=0 (not authoritative)
+     * - TC=0 (not truncated)
+     * - RD=1 ak bol v query
+     * - RA=0 (recursion not available)
+     * - Z=0 (reserved)
+     * - RCODE=zadaný kód
+     */
+    uint16_t rd = query->header.flags & DNS_FLAG_RD;
+    resp_header.flags = DNS_FLAG_QR | rd | rcode;
+
+    resp_header.qdcount = query->header.qdcount;  /* Skopírujeme otázku */
+    resp_header.ancount = 0;  /* Žiadne answers */
+    resp_header.nscount = 0;  /* Žiadne authority */
+    resp_header.arcount = 0;  /* Žiadne additional */
+
+    /* Zapíšeme header do bufferu */
+    uint8_t *ptr = *response;
+
+    /* ID - 2 bajty */
+    ptr[0] = (resp_header.id >> 8) & 0xFF;
+    ptr[1] = resp_header.id & 0xFF;
+
+    /* Flags - 2 bajty */
+    ptr[2] = (resp_header.flags >> 8) & 0xFF;
+    ptr[3] = resp_header.flags & 0xFF;
+
+    /* QDCOUNT - 2 bajty */
+    ptr[4] = (resp_header.qdcount >> 8) & 0xFF;
+    ptr[5] = resp_header.qdcount & 0xFF;
+
+    /* ANCOUNT - 2 bajty */
+    ptr[6] = (resp_header.ancount >> 8) & 0xFF;
+    ptr[7] = resp_header.ancount & 0xFF;
+
+    /* NSCOUNT - 2 bajty */
+    ptr[8] = (resp_header.nscount >> 8) & 0xFF;
+    ptr[9] = resp_header.nscount & 0xFF;
+
+    /* ARCOUNT - 2 bajty */
+    ptr[10] = (resp_header.arcount >> 8) & 0xFF;
+    ptr[11] = resp_header.arcount & 0xFF;
+
+    /* Skopírujeme question section z pôvodného query */
+    memcpy(*response + DNS_HEADER_SIZE,
+           query->raw_data + DNS_HEADER_SIZE,
+           question_size);
+
+    return 0;
+}
+
+/**
+ * @brief Zakóduje doménové meno do DNS formátu
+ */
+int encode_dns_name(const char *domain, uint8_t *buffer, size_t buf_len) {
+    if (!domain || !buffer || buf_len == 0) {
+        return -1;
+    }
+
+    /* Prázdna doména = len nulový bajt */
+    if (domain[0] == '\0') {
+        if (buf_len < 1) {
+            return -1;
+        }
+        buffer[0] = 0;
+        return 1;
+    }
+
+    size_t domain_len = strlen(domain);
+    if (domain_len > DNS_MAX_NAME_LEN) {
+        return -1;
+    }
+
+    /* Skopírujeme doménu pre manipuláciu */
+    char *domain_copy = strdup(domain);
+    if (!domain_copy) {
+        return -1;
+    }
+
+    uint8_t *ptr = buffer;
+    size_t bytes_written = 0;
+
+    /* Rozdelíme doménu na labely */
+    char *label = strtok(domain_copy, ".");
+
+    while (label != NULL) {
+        size_t label_len = strlen(label);
+
+        /* Validácia dĺžky labelu */
+        if (label_len == 0 || label_len > DNS_MAX_LABEL_LEN) {
+            free(domain_copy);
+            return -1;
+        }
+
+        /* Kontrola bufferu */
+        if (bytes_written + label_len + 1 >= buf_len) {
+            free(domain_copy);
+            return -1;
+        }
+
+        /* Zapíšeme dĺžku labelu */
+        *ptr++ = (uint8_t)label_len;
+        bytes_written++;
+
+        /* Zapíšeme label */
+        memcpy(ptr, label, label_len);
+        ptr += label_len;
+        bytes_written += label_len;
+
+        label = strtok(NULL, ".");
+    }
+
+    /* Ukončujúca nula */
+    if (bytes_written >= buf_len) {
+        free(domain_copy);
+        return -1;
+    }
+
+    *ptr = 0;
+    bytes_written++;
+
+    free(domain_copy);
+    return bytes_written;
+}
