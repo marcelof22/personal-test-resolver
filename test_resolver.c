@@ -1,6 +1,8 @@
 /**
  * @file test_resolver.c
- * @brief Unit testy pre upstream resolver modul
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
  #include "dns.h"
@@ -25,17 +27,17 @@
  int tests_failed = 0;
  
  #define TEST_PASS(msg) do { \
-     printf("  " COLOR_GREEN "✓" COLOR_RESET " %s\n", msg); \
+     printf("  " COLOR_GREEN "Y" COLOR_RESET " %s\n", msg); \
      tests_passed++; \
  } while(0)
  
  #define TEST_FAIL(msg) do { \
-     printf("  " COLOR_RED "✗" COLOR_RESET " %s\n", msg); \
+     printf("  " COLOR_RED "N" COLOR_RESET " %s\n", msg); \
      tests_failed++; \
  } while(0)
  
  #define TEST_SKIP(msg) do { \
-     printf("  " COLOR_YELLOW "⊘" COLOR_RESET " %s (skipped)\n", msg); \
+     printf("  " COLOR_YELLOW "W" COLOR_RESET " %s (skipped)\n", msg); \
  } while(0)
  
  /**
@@ -278,10 +280,10 @@
      printf("==============================================\n");
      
      if (tests_failed == 0) {
-         printf(COLOR_GREEN "✓ All tests passed!" COLOR_RESET "\n");
+         printf(COLOR_GREEN " All tests passed!" COLOR_RESET "\n");
          return 0;
      } else {
-         printf(COLOR_RED "✗ Some tests failed!" COLOR_RESET "\n");
+         printf(COLOR_RED " Some tests failed!" COLOR_RESET "\n");
          return 1;
      }
  }

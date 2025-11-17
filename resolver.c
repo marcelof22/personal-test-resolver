@@ -1,12 +1,8 @@
 /**
  * @file resolver.c
- * @brief Upstream DNS resolver komunikácia
- * 
- * Implementuje preposlanie DNS dotazov na upstream server:
- * - Hostname → IP resolution
- * - UDP komunikácia s upstream
- * - Timeout handling
- * - Retry mechanizmus
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
  #include "resolver.h"

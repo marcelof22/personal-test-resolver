@@ -1,13 +1,8 @@
 /**
  * @file dns_server.c
- * @brief UDP DNS Server implementation
- * 
- * Implementuje hlavnú slučku DNS servera:
- * - Prijímanie UDP dotazov
- * - Parsing DNS správ
- * - Filtrovanie nežiadúcich domén
- * - Stavanie chybových odpovedí
- * - Forwarding na upstream server (FÁZA 6)
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
  #include "dns_server.h"

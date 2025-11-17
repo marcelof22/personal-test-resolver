@@ -1,12 +1,8 @@
 /**
  * @file filter.c
- * @brief Filter nežiadúcich domén pomocou Trie štruktúry
- * 
- * Trie je organizovaný v reverznom poradí (TLD najprv):
- * Príklad: "ads.google.com" -> com -> google -> ads
- * 
- * Toto umožňuje efektívne blokovanie subdomén:
- * Ak je blokovaná "google.com", automaticky sú blokované aj všetky subdomény.
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
  #include "filter.h"

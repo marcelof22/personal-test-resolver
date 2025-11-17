@@ -1,6 +1,8 @@
 /**
  * @file dns_parser.h
- * @brief DNS message parsing podľa RFC 1035
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
 #ifndef DNS_PARSER_H

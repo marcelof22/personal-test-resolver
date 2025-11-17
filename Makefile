@@ -1,6 +1,6 @@
-# Makefile pre DNS Resolver projekt
-# Autor: ISA projekt
-# Standard: C99 s POSIX extensions
+# Makefile pre Filtering DNS Resolver
+# Autor: Marcel Feiler (xfeile00)
+# Dátum: 10.11.2025
 
 # Kompilátor a flagy
 CC = gcc
@@ -19,9 +19,8 @@ COLOR_GREEN = \033[32m
 COLOR_YELLOW = \033[33m
 COLOR_BLUE = \033[34m
 
-# ============================================================================
+
 # HLAVNÉ CIELE
-# ============================================================================
 
 .PHONY: all clean test help
 
@@ -39,9 +38,7 @@ $(TARGET): $(OBJECTS)
 	@echo "$(COLOR_YELLOW)Compiling $<...$(COLOR_RESET)"
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# ============================================================================
 # ČISTENIE
-# ============================================================================
 
 clean:
 	@echo "$(COLOR_YELLOW)Cleaning...$(COLOR_RESET)"
@@ -50,9 +47,8 @@ clean:
 	rm -f vgcore.*
 	@echo "$(COLOR_GREEN)✓ Clean complete$(COLOR_RESET)"
 
-# ============================================================================
+
 # TESTOVANIE
-# ============================================================================
 
 test: $(TARGET)
 	@echo "$(COLOR_BLUE)Running tests...$(COLOR_RESET)"
@@ -66,9 +62,9 @@ test: $(TARGET)
 		echo "  dig @127.0.0.1 -p 5353 google.com"; \
 	fi
 
-# ============================================================================
+
 # DEBUG & MEMORY CHECK
-# ============================================================================
+
 
 debug: CFLAGS += -DDEBUG -O0
 debug: clean all
@@ -81,18 +77,18 @@ memcheck: $(TARGET)
 		--verbose --log-file=valgrind.log ./$(TARGET) -s 8.8.8.8 -f /mnt/project/serverlist_neziaduce_domeny.txt || true
 	@echo "$(COLOR_YELLOW)Check valgrind.log for details$(COLOR_RESET)"
 
-# ============================================================================
+
 # RELEASE BUILD
-# ============================================================================
+
 
 release: CFLAGS = -std=gnu99 -Wall -Wextra -Werror -O2 -DNDEBUG
 release: clean all
 	@echo "$(COLOR_GREEN)✓ Release build complete$(COLOR_RESET)"
 	strip $(TARGET)
 
-# ============================================================================
+
 # POMOCNÉ CIELE
-# ============================================================================
+
 
 help:
 	@echo "$(COLOR_BLUE)DNS Resolver Makefile$(COLOR_RESET)"

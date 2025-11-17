@@ -1,9 +1,8 @@
 /**
  * @file main.c
- * @brief DNS Resolver - hlavný entry point
- * @author ISA projekt
- * 
- * Použitie: dns -s server [-p port] -f filter_file [-v]
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
 #include "dns.h"

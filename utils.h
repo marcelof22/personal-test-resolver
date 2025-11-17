@@ -1,6 +1,8 @@
 /**
  * @file utils.h
- * @brief Pomocné funkcie pre DNS Resolver
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
  #ifndef UTILS_H

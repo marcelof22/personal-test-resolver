@@ -1,11 +1,8 @@
 /**
  * @file dns_parser.c
- * @brief DNS message parsing podľa RFC 1035
- * 
- * Implementuje parsing DNS správ vrátane:
- * - Header parsing (Section 4.1.1)
- * - Question section parsing (Section 4.1.2)
- * - DNS name parsing s compression support (Section 4.1.4)
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
  #include "dns_parser.h"

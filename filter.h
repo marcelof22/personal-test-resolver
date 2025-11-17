@@ -1,6 +1,8 @@
 /**
  * @file filter.h
- * @brief Filter nežiadúcich domén pomocou Trie štruktúry
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
 #ifndef FILTER_H

@@ -1,12 +1,8 @@
 /**
  * @file test_dns_server.c
- * @brief Test program pre DNS server
- * 
- * Tento test:
- * 1. Vytvorí test filter súbor
- * 2. Spustí DNS server v separátnom procese
- * 3. Pošle testovacie DNS dotazy
- * 4. Overí odpovede
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
  #include "dns.h"
@@ -186,20 +182,20 @@
                      uint16_t rcode = parsed.header.flags & 0x0F;
                      
                      if (rcode == DNS_RCODE_NXDOMAIN) {
-                         printf("  ✓ PASS: Got NXDOMAIN (blocked)\n");
+                         printf("   PASS: Got NXDOMAIN (blocked)\n");
                          tests_passed++;
                      } else {
-                         printf("  ✗ FAIL: Expected NXDOMAIN, got RCODE=%u\n", rcode);
+                         printf("   FAIL: Expected NXDOMAIN, got RCODE=%u\n", rcode);
                          tests_failed++;
                      }
                      
                      free_dns_message(&parsed);
                  } else {
-                     printf("  ✗ FAIL: Failed to parse response\n");
+                     printf("   FAIL: Failed to parse response\n");
                      tests_failed++;
                  }
              } else {
-                 printf("  ✗ FAIL: No response (timeout?)\n");
+                 printf("   FAIL: No response (timeout?)\n");
                  tests_failed++;
              }
          }
@@ -224,18 +220,18 @@
                      uint16_t rcode = header.flags & 0x0F;
                      
                      if (rcode == DNS_RCODE_NOTIMPL) {
-                         printf("  ✓ PASS: Got NOTIMPL\n");
+                         printf("   PASS: Got NOTIMPL\n");
                          tests_passed++;
                      } else {
-                         printf("  ✗ FAIL: Expected NOTIMPL, got RCODE=%u\n", rcode);
+                         printf("   FAIL: Expected NOTIMPL, got RCODE=%u\n", rcode);
                          tests_failed++;
                      }
                  } else {
-                     printf("  ✗ FAIL: Failed to parse response\n");
+                     printf("   FAIL: Failed to parse response\n");
                      tests_failed++;
                  }
              } else {
-                 printf("  ✗ FAIL: No response\n");
+                 printf("   FAIL: No response\n");
                  tests_failed++;
              }
          }
@@ -260,18 +256,18 @@
                      uint16_t rcode = header.flags & 0x0F;
                      
                      if (rcode == DNS_RCODE_SERVFAIL) {
-                         printf("  ✓ PASS: Got SERVFAIL (expected, resolver stub)\n");
+                         printf("   PASS: Got SERVFAIL (expected, resolver stub)\n");
                          tests_passed++;
                      } else {
-                         printf("  ✗ FAIL: Expected SERVFAIL, got RCODE=%u\n", rcode);
+                         printf("   FAIL: Expected SERVFAIL, got RCODE=%u\n", rcode);
                          tests_failed++;
                      }
                  } else {
-                     printf("  ✗ FAIL: Failed to parse response\n");
+                     printf("   FAIL: Failed to parse response\n");
                      tests_failed++;
                  }
              } else {
-                 printf("  ✗ FAIL: No response\n");
+                 printf("   FAIL: No response\n");
                  tests_failed++;
              }
          }
@@ -286,10 +282,10 @@
      printf("==============================================\n");
      
      if (tests_failed == 0) {
-         printf("✓ All tests passed!\n");
+         printf(" All tests passed!\n");
          return 0;
      } else {
-         printf("✗ Some tests failed!\n");
+         printf(" Some tests failed!\n");
          return 1;
      }
  }

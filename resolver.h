@@ -1,6 +1,8 @@
 /**
  * @file resolver.h
- * @brief Upstream DNS resolver komunikácia
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
  #ifndef RESOLVER_H

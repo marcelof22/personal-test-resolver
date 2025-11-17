@@ -1,6 +1,8 @@
 /**
  * @file utils.c
- * @brief Implementácia pomocných funkcií
+ * @author Marcel Feiler (xfeile00)
+ * @date 10.11.2025
+ * @brief Filtering DNS Resolver
  */
 
  #include "utils.h"
