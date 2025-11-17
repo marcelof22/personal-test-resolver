@@ -584,3 +584,61 @@
          printf("[VERBOSE]   Average branching factor: %.2f\n", avg_branching);
      }
  }
+/* ============================================================================
+ * WRAPPER API PRE TESTY
+ * ============================================================================ */
+
+/**
+ * @brief Inicializuje nový filter
+ */
+filter_t *filter_init(void) {
+    filter_t *filter = (filter_t *)malloc(sizeof(filter_t));
+    if (filter == NULL) {
+        return NULL;
+    }
+
+    filter->root = filter_node_create();
+    if (filter->root == NULL) {
+        free(filter);
+        return NULL;
+    }
+
+    return filter;
+}
+
+/**
+ * @brief Uvoľní filter
+ */
+void filter_free(filter_t *filter) {
+    if (filter == NULL) {
+        return;
+    }
+
+    if (filter->root != NULL) {
+        filter_node_free(filter->root);
+    }
+
+    free(filter);
+}
+
+/**
+ * @brief Pridá doménu do filtra
+ */
+int filter_insert(filter_t *filter, const char *domain) {
+    if (filter == NULL || filter->root == NULL) {
+        return -1;
+    }
+
+    return filter_add_domain(filter->root, domain);
+}
+
+/**
+ * @brief Kontroluje či je doména blokovaná
+ */
+bool filter_lookup(const filter_t *filter, const char *domain) {
+    if (filter == NULL || filter->root == NULL) {
+        return false;
+    }
+
+    return is_domain_blocked(filter->root, domain);
+}

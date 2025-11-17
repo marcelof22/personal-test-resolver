@@ -92,4 +92,43 @@ int normalize_domain(const char *domain, char *normalized, size_t len);
  */
 void filter_print_stats(const filter_node_t *root, bool verbose);
 
+/* ============================================================================
+ * WRAPPER API PRE TESTY
+ * ============================================================================ */
+
+/**
+ * @brief Wrapper štruktúra pre filter (pre jednoduchšie testovanie)
+ */
+typedef struct {
+    filter_node_t *root;
+} filter_t;
+
+/**
+ * @brief Inicializuje nový filter
+ * @return Nový filter alebo NULL pri chybe
+ */
+filter_t *filter_init(void);
+
+/**
+ * @brief Uvoľní filter
+ * @param filter Filter na uvoľnenie
+ */
+void filter_free(filter_t *filter);
+
+/**
+ * @brief Pridá doménu do filtra
+ * @param filter Filter
+ * @param domain Doménové meno
+ * @return 0 pri úspechu, -1 pri chybe
+ */
+int filter_insert(filter_t *filter, const char *domain);
+
+/**
+ * @brief Kontroluje či je doména blokovaná
+ * @param filter Filter
+ * @param domain Doménové meno
+ * @return true ak je blokovaná, false inak
+ */
+bool filter_lookup(const filter_t *filter, const char *domain);
+
 #endif /* FILTER_H */
